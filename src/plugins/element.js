@@ -1,4 +1,14 @@
-import Vue from 'vue'
-import { Button } from 'element-ui'
+import { ElForm, ElFormItem, ElInput, ElButton, ElMessage } from 'element-plus'
 
-Vue.use(Button)
+const components = [
+  ElForm,
+  ElFormItem,
+  ElInput,
+  ElButton
+]
+export default (Vue) => {
+  components.forEach(item => {
+    Vue.use(item)
+  })
+  Vue.config.globalProperties.$message = ElMessage
+}
