@@ -24,7 +24,11 @@ import {
   ElTooltip,
   ElPagination,
   ElDialog,
-  ElMessageBox
+  ElMessageBox,
+  ElTag,
+  ElTree,
+  ElSelect,
+  ElOption
 } from 'element-plus'
 
 const components = [
@@ -51,7 +55,11 @@ const components = [
   ElSwitch,
   ElTooltip,
   ElPagination,
-  ElDialog
+  ElDialog,
+  ElTag,
+  ElTree,
+  ElSelect,
+  ElOption
 ]
 export default (Vue) => {
   components.forEach(item => {

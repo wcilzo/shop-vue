@@ -13,7 +13,7 @@
         <el-col :span="8">
           <el-input v-model="queryInfo.query" placeholder="请输入内容" clearable @clear="getUserList">
             <template #append>
-              <el-button :icon="Search" @click="getUserList"/>
+              <el-button :icon="Search" @click="getUserList" />
             </template>
           </el-input>
         </el-col>
@@ -31,47 +31,39 @@
         <el-table-column label="状态">
           <!-- vue2.6之前已经弃用这方法，2.6后用 v-slot:default="scope" -->
           <template v-slot:default="scope">
-            <el-switch v-model="scope.row.mg_state" @change="userStateChange(scope.row)"/>
+            <el-switch v-model="scope.row.mg_state" @change="userStateChange(scope.row)" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="190px">
           <template v-slot:default="scope">
-            <el-button v-model="scope.row" type="primary" :icon="Edit" size="mini" @click="showEditDialog(scope.row.id)"/>
-            <el-button type="danger" :icon="Delete" size="mini" @click="removeUserById(scope.row.id)"/>
+            <el-button v-model="scope.row" type="primary" :icon="Edit" size="mini" @click="showEditDialog(scope.row.id)" />
+            <el-button type="danger" :icon="Delete" size="mini" @click="removeUserById(scope.row.id)" />
             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
-              <el-button type="warning" :icon="Setting" size="mini"/>
+              <el-button type="warning" :icon="Setting" size="mini" @click="setRole(scope.row)" />
             </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
-        <!-- 分页区 -->
-        <!-- v-model 报错问题 https://www.jianshu.com/p/8852f50b23da -->
-        <el-pagination
-          v-model:current-page="queryInfo.pagenum"
-          v-model:page-size="queryInfo.pagesize"
-          :page-sizes="[1, 2, 5, 10]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+      <!-- 分页区 -->
+      <!-- v-model 报错问题 https://www.jianshu.com/p/8852f50b23da -->
+      <el-pagination v-model:current-page="queryInfo.pagenum" v-model:page-size="queryInfo.pagesize" :page-sizes="[1, 2, 5, 10]" layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
     </el-card>
     <!-- 没有:visible.sync,用 v-model绑定 -->
     <el-dialog v-model="addDialogVisible" title="添加用户" width="50%" @close="addDialogClosed">
-        <el-form ref="addFormRef" :model="addForm" :rules="addFormRules" label-width="70px" status-icon >
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="addForm.username" />
-            </el-form-item>
-            <el-form-item label="密码" prop="password">
-              <el-input v-model="addForm.password" />
-            </el-form-item>
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="addForm.email" />
-            </el-form-item>
-            <el-form-item label="手机" prop="mobile">
-              <el-input v-model="addForm.mobile" />
-            </el-form-item>
-        </el-form>
+      <el-form ref="addFormRef" :model="addForm" :rules="addFormRules" label-width="70px" status-icon>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="addForm.username" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="addForm.password" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="addForm.email" />
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="addForm.mobile" />
+        </el-form-item>
+      </el-form>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="addDialogVisible = false">取消</el-button>
@@ -82,7 +74,7 @@
     <el-dialog v-model="editDialogVisible" title="提示" width="50%" @close="editDialogClosed">
       <el-form ref="editFormRef" :model="editForm" :rules="editFormRules" label-width="70px" status-icon>
         <el-form-item label="用户名">
-          <el-input v-model="editForm.username" disabled/>
+          <el-input v-model="editForm.username" disabled />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editForm.email" />
@@ -95,6 +87,26 @@
         <span class="dialog-footer">
           <el-button @click="editDialogVisible = false">取消</el-button>
           <el-button type="primary" @click="editUserInfo">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="setRoleDialogVisible" title="分配角色" width="50%" @close="setRoleDiaClosed">
+      <div>
+        <p>当前的用户: {{ userInfo.username }}</p>
+        <p>当前的角色: {{ userInfo.role_name }}</p>
+        <p>
+          分配新角色:
+          <el-select v-model="selectedRoleId" placeholder="请选择">
+            <el-option v-for="item in roleList" :key="item.id" :label="item.roleName" :value="item.id" />
+          </el-select>
+        </p>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="setRoleDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="saveRoleInfo">
+            确定
+          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -127,10 +139,14 @@ export default {
         pagenum: 1,
         pagesize: 2
       },
+      userInfo: {},
       userlist: [],
+      roleList: [],
       total: 0,
       addDialogVisible: false,
       editDialogVisible: false,
+      setRoleDialogVisible: false,
+      selectedRoleId: '',
       editForm: {},
       addForm: {
         username: '',
@@ -179,7 +195,7 @@ export default {
       if (res.meta.status !== 200) return this.$message.error('获取用户列表失败')
       this.userlist = res.data.users
       this.total = res.data.total
-    //   console.log(res)
+      //   console.log(res)
     },
     handleSizeChange (newSize) {
       this.queryInfo.pagesize = newSize
@@ -202,7 +218,6 @@ export default {
     },
     addUser () {
       this.$refs.addFormRef.validate(async valid => {
-        console.log(valid)
         if (!valid) return
         const { data: res } = await this.$http.post('users', this.addForm)
         // restful风格规范，200：(get)获取数据成功；201：(post/put/patch)新建、修改数据成功；204：(delete)删除数据成功
@@ -215,7 +230,7 @@ export default {
       })
     },
     async showEditDialog (id) {
-    //   console.log(id)
+      //   console.log(id)
       const { data: res } = await this.$http.get('users/' + id)
       if (res.meta.status !== 200) {
         return this.$message.error('查询用户信息失败! ')
@@ -238,7 +253,7 @@ export default {
     },
     async removeUserById (id) {
       const confirmResult = await this.$confirm(
-        '此操作将永久删除该用户，是否继续',
+        '此操作将永久删除该用户, 是否继续',
         '提示',
         {
           confirmButtonText: '确认',
@@ -255,6 +270,32 @@ export default {
       }
       this.$message.success('删除成功! ')
       this.getUserList()
+    },
+    async setRole (userInfo) {
+      this.userInfo = userInfo
+      // 展示对话框之前获取所有角色列表
+      const { data: res } = await this.$http.get('roles')
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取角色列表失败! ')
+      }
+      this.roleList = res.data
+      this.setRoleDialogVisible = true
+    },
+    async saveRoleInfo () {
+      if (!this.selectedRoleId) {
+        return this.$message.error('请选择要分配的角色! ')
+      }
+      const { data: res } = await this.$http.put(`users/${this.userInfo.id}/role`, { rid: this.selectedRoleId })
+      if (res.meta.status !== 200) {
+        return this.$message.error('更新角色失败! ')
+      }
+      this.$message.success('更新角色成功! ')
+      this.getUserList()
+      this.setRoleDialogVisible = false
+    },
+    setRoleDiaClosed () {
+      this.selectedRoleId = ''
+      this.userInfo = {}
     }
   },
   setup () {
@@ -270,5 +311,4 @@ export default {
 </script>
 
 <style lang="less" scoped>
-
 </style>
